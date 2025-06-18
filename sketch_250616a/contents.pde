@@ -35,6 +35,8 @@ void CreateSprites() {
   Pattern pattern2 = new Pattern(new PVector(0, 0), active_pixels2, 29, #FFFD04);
   snapshots[1][0] = pattern2;
   
-  sprites = new Sprite[1]; sprite_count = 1;
-  sprites[0] = new Sprite(new PVector(20, 15), new PVector(7, 7), snapshots, 2, 1, 0, true);
+  sprites.put("pacman", new Sprite("pacman", new PVector(40, 30), new PVector(7, 7), snapshots, 2, 1, 0, true));
+  
+  sprites.get("pacman").SetVelocity(1, 1);
+  sprites.get("pacman").SetScreenBehaviour(3);
 }

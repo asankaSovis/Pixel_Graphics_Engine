@@ -68,6 +68,9 @@ class Sprite {
   boolean[] reached_the_bounds = {false, false, false, false};
   boolean[] out_of_bounds = {false, false, false, false};
   
+  int rotation = 0;
+  boolean[] flip = {false, false};
+  
   Sprite(String _sprite_name, PVector _initial_position, PVector _bounding_box, Pattern[][] _snapshots, int _snapshot_count, int _pattern_count, int _active_snapshot, boolean _auto_animate) {
     sprite_name = _sprite_name;
     position = _initial_position;
@@ -87,10 +90,60 @@ class Sprite {
     position.x = x; position.y = y;
   }
   
+  void SetColour(color colour) {
+    for (int i = 0; i < snapshot_count; i++) {
+      for (int j = 0; j < pattern_count; j++) {
+        snapshots[i][j].colour = colour;
+      }
+    }
+  }
+  
   void SetScreenBehaviour(int _drive_type) {
     drive_type = _drive_type;
   }
   
+  void Rotate(int amount) {
+    if ((amount > 0) && (amount < 4)) {
+      if (amount == 1) {
+        for (int i = 0; i < snapshot_count; i++) {
+          for (int j = 0; j < pattern_count; j++) {
+            snapshots[i][j].Rotate();
+            snapshots[i][j].Flip(false);
+          }
+        }
+      } else if (amount == 2) {
+        for (int i = 0; i < snapshot_count; i++) {
+          for (int j = 0; j < pattern_count; j++) {
+            snapshots[i][j].Flip(false);
+            snapshots[i][j].Flip(true);
+          }
+        }
+      } else if (amount == 3) {
+        for (int i = 0; i < snapshot_count; i++) {
+          for (int j = 0; j < pattern_count; j++) {
+            snapshots[i][j].Rotate();
+            snapshots[i][j].Flip(true);
+          }
+        }
+      }
+      
+      rotation = (rotation + amount) % 4;
+    }
+  }
+  
+  void Flip(boolean dir) {
+    for (int i = 0; i < snapshot_count; i++) {
+      for (int j = 0; j < pattern_count; j++) {
+        snapshots[i][j].Flip(dir);
+      }
+    }
+   
+    if (dir) {
+      flip[1] = !(flip[1]);
+    } else {
+      flip[0] = !(flip[0]);
+    }
+  }
   
   void update() {
     position.add(velocity);
@@ -165,15 +218,37 @@ class Sprite {
 
 class Pattern {
   PVector offset_position = new PVector(0, 0);
+  PVector bounding_box = new PVector(0, 0);
   PVector[] active_pixels;
   int pixel_count = 0;
   color colour = color(0, 0, 0);
   
-  Pattern(PVector _offset_position, PVector[] _active_pixels, int _pixel_count, color _colour) {
+  Pattern(PVector _offset_position, PVector _bounding_box, PVector[] _active_pixels, int _pixel_count, color _colour) {
     offset_position = _offset_position;
+    bounding_box = _bounding_box;
     active_pixels = _active_pixels;
     pixel_count = _pixel_count;
     colour = _colour;
+  }
+  
+  void Rotate() {
+    for (int i = 0; i < pixel_count; i++) {
+      float temp = active_pixels[i].y;
+      active_pixels[i].y = active_pixels[i].x;
+      active_pixels[i].x = temp;
+    }
+  }
+  
+  void Flip(boolean dir) {
+    if (dir) {
+      for (int i = 0; i < pixel_count; i++) {
+        active_pixels[i].y = (bounding_box.y - active_pixels[i].y - 1);
+      }
+    } else {
+      for (int i = 0; i < pixel_count; i++) {
+        active_pixels[i].x = (bounding_box.x - active_pixels[i].x - 1);
+      }
+    }
   }
   
   void draw(int x_pos, int y_pos, int wrap) {

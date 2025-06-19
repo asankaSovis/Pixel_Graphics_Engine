@@ -1,4 +1,4 @@
-PVector pixel_res = new PVector(50, 40);
+PVector pixel_res = new PVector(46, 46);
 int pixel_raduis = 7;
 color back = #2F2F2F;
 int frame_delay = 300;
@@ -8,7 +8,7 @@ color[][] pixel_array = new color[(int)pixel_res.x][(int)pixel_res.y];
 Driver driver = new Driver(false, color(0, 0, 0), false);
 
 void setup() {
-  size(1000, 800);
+  size(920, 920);
   driver.Initialize();
 }
 

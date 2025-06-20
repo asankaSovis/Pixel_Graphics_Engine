@@ -13,6 +13,7 @@ void setup() {
 }
 
 void draw() {
+  PerformLogic();
   driver.UpdatePixels();
   DrawPixels();
   delay(frame_delay);

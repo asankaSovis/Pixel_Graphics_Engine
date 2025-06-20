@@ -61,6 +61,7 @@ class Sprite {
   PVector bounding_box = new PVector(0, 0);
   Pattern[][] snapshots;
   int snapshot_count = 0; int pattern_count = 0;
+  int animation_count = 0; int animation_offset = 0;
   int active_snapshot = -1;
   boolean auto_animate = false;
   int drive_type = 0;
@@ -80,6 +81,9 @@ class Sprite {
     pattern_count = _pattern_count;
     active_snapshot = _active_snapshot;
     auto_animate = _auto_animate;
+    
+    animation_count = snapshot_count;
+    animation_offset = 0;
   }
   
   void SetVelocity(int x, int y) {
@@ -103,6 +107,12 @@ class Sprite {
   }
   
   void Rotate(int amount) {
+    ResetTransform();
+    
+    rotate(amount);
+  }
+  
+  void rotate(int amount) {
     if ((amount > 0) && (amount < 4)) {
       if (amount == 1) {
         for (int i = 0; i < snapshot_count; i++) {
@@ -132,6 +142,12 @@ class Sprite {
   }
   
   void Flip(boolean dir) {
+    ResetTransform();
+    
+    flip(dir);
+  }
+  
+  void flip(boolean dir) {
     for (int i = 0; i < snapshot_count; i++) {
       for (int j = 0; j < pattern_count; j++) {
         snapshots[i][j].Flip(dir);
@@ -142,6 +158,28 @@ class Sprite {
       flip[1] = !(flip[1]);
     } else {
       flip[0] = !(flip[0]);
+    }
+  }
+  
+  boolean SetKeyFrames(int offset, int count) {
+    if ((offset >= 0) && (count >= 0) && (offset + count <= snapshot_count)) {
+      animation_offset = offset; animation_count = count;
+      return true;
+    }
+    return false;
+  }
+  
+  void ResetTransform() {
+    if (rotation != 0) {
+      rotate(4 - rotation);
+    }
+    
+    if (flip[0]) {
+      flip(false);
+    }
+    
+    if (flip[1]) {
+      flip(true);
     }
   }
   
@@ -207,7 +245,7 @@ class Sprite {
       
       if ((active_snapshot > -1) && (active_snapshot < snapshot_count)) {
         if (auto_animate) {
-          active_snapshot = frameCount % snapshot_count;
+          active_snapshot = animation_offset + (frameCount % animation_count);
         }
       }
     } else {

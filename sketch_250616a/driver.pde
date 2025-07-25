@@ -46,9 +46,9 @@ class Driver {
       }
       
       for (Map.Entry me : sprites.entrySet()) {
-        Sprite sprite = (Sprite)me.getValue();
-        sprite.animate();
-        sprite.update();
+        Sprite me_sprite = (Sprite)me.getValue();
+        me_sprite.animate();
+        me_sprite.update();
       }
     }
   }
@@ -65,14 +65,16 @@ class Sprite {
   int active_snapshot = -1;
   boolean auto_animate = false;
   int drive_type = 0;
+  int collision_layer = 1;
   
   boolean[] reached_the_bounds = {false, false, false, false};
   boolean[] out_of_bounds = {false, false, false, false};
+  HashMap<String, Sprite> collided_with = new HashMap<String, Sprite>();
   
   int rotation = 0;
   boolean[] flip = {false, false};
   
-  Sprite(String _sprite_name, PVector _initial_position, PVector _bounding_box, Pattern[][] _snapshots, int _snapshot_count, int _pattern_count, int _active_snapshot, boolean _auto_animate) {
+  Sprite(String _sprite_name, PVector _initial_position, PVector _bounding_box, Pattern[][] _snapshots, int _snapshot_count, int _pattern_count, int _active_snapshot, boolean _auto_animate, int _collision_layer) {
     sprite_name = _sprite_name;
     position = _initial_position;
     bounding_box = _bounding_box;
@@ -81,6 +83,7 @@ class Sprite {
     pattern_count = _pattern_count;
     active_snapshot = _active_snapshot;
     auto_animate = _auto_animate;
+    collision_layer = _collision_layer;
     
     animation_count = snapshot_count;
     animation_offset = 0;
@@ -182,9 +185,50 @@ class Sprite {
       flip(true);
     }
   }
+
+  boolean CheckCollision(Sprite sprite) {
+    PVector next_position_me = new PVector(position.x, position.y);
+    PVector next_position_sprite = new PVector(sprite.position.x, sprite.position.y);
+    next_position_me.add(velocity);
+    next_position_sprite.add(sprite.velocity);
+    
+    boolean collision = (((next_position_me.x <= next_position_sprite.x + sprite.bounding_box.x) &&
+            (next_position_me.x + bounding_box.x >= next_position_sprite.x)) &&
+            ((next_position_me.y <= next_position_sprite.y + sprite.bounding_box.y) &&
+            (next_position_me.y + bounding_box.y >= next_position_sprite.y)));
+
+    return collision;
+  }
   
   void update() {
-    position.add(velocity);
+    boolean collision_detected = false;
+    // Clear the hashmap for collided sprites
+    collided_with.clear();
+    
+    for (Map.Entry other : sprites.entrySet()) {
+      Sprite other_sprite = (Sprite)other.getValue();
+      
+      if ((sprite_name != other_sprite.sprite_name) && ((collision_layer == 0) || (other_sprite.collision_layer == 0) || (collision_layer == other_sprite.collision_layer))) {
+        boolean collision = CheckCollision(other_sprite);
+        
+        if (collision) {
+          //println(sprite_name + " collided with " + other_sprite.sprite_name);
+          
+          if (other_sprite.drive_type == 2) { // Bounce
+            velocity.x = -velocity.x;
+            velocity.y = -velocity.y;
+          }
+
+          collision_detected = true;
+          // Add the collided sprite to the hashmap
+          collided_with.put(other_sprite.sprite_name, other_sprite);
+        }
+      }
+    }
+
+    if (!collision_detected) {
+      position.add(velocity);
+    }
     
     reached_the_bounds[0] = (position.x <= 0);
     reached_the_bounds[1] = (position.y <= 0);
@@ -202,11 +246,15 @@ class Sprite {
       }
     }
     if (drive_type == 2) { // Bounce at edge
-      if (reached_the_bounds[0] || reached_the_bounds[2]) {
-        velocity.x = -(velocity.x);
+      if (reached_the_bounds[0]) {
+        velocity.x = abs(velocity.x);
+      } else if (reached_the_bounds[2]) {
+        velocity.x = -(abs(velocity.x));
       }
-      if (reached_the_bounds[1] || reached_the_bounds[3]) {
-        velocity.y = -(velocity.y);
+      if (reached_the_bounds[1]) {
+        velocity.y = abs(velocity.y);
+      } else if (reached_the_bounds[3]) {
+        velocity.y = -(abs(velocity.y));
       }
     }
     if (drive_type == 3) { // Wrap at edge
@@ -249,7 +297,7 @@ class Sprite {
         }
       }
     } else {
-      println(sprite_name + ": Not drawn");
+      //println(sprite_name + ": Not drawn");
     }
   }
 }

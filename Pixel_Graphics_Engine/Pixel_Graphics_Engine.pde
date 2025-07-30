@@ -9,7 +9,7 @@
  * @details
  * - Main Processing sketch file for the pixel art animation.
  *
- * @file sketch_250616a.pde
+ * @file Pixel_Graphics_Engine.pde
  * @author Asanka Sovis (Skeptic Studios)
  * @version 1.0
  * @license GNU General Public License v3.0 (GPL-3.0)
